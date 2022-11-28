@@ -6,6 +6,7 @@ import { AddIcon } from "@chakra-ui/icons";
 import ChatLoading from "./ChatLoading";
 import GroupChatModal from "./miscellaneous/GroupChatModal";
 import { getSender } from "./ChatLogic";
+import { socket } from "./SingleChat";
 
 const MyChats = ({ fetchAgain }) => {
   const toast = useToast();
@@ -19,7 +20,10 @@ const MyChats = ({ fetchAgain }) => {
           Authorization: `Bearer ${user.token}`,
         },
       };
-      const { data } = await axios.get(process.env.REACT_APP_BACKEND_URL + "/api/chat", config);
+      const { data } = await axios.get(
+        process.env.REACT_APP_BACKEND_URL + "/api/chat",
+        config
+      );
       setChats(data);
     } catch (err) {
       toast({
@@ -77,7 +81,10 @@ const MyChats = ({ fetchAgain }) => {
           <Stack overflowY="scroll">
             {chats.map((chat) => (
               <Box
-                onClick={() => setSelectedChat(chat)}
+                onClick={() => {
+                  if (selectedChat) socket.emit("leave room", selectedChat._id);
+                  setSelectedChat(chat);
+                }}
                 cursor="pointer"
                 bg={selectedChat?._id === chat._id ? "#38B2AC" : "E8E8E8"}
                 color={selectedChat?._id === chat._id ? "white" : "black"}

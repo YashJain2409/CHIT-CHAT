@@ -20,7 +20,7 @@ import animationData from "../animations/typing.json";
 import io from "socket.io-client";
 
 const ENDPOINT = process.env.REACT_APP_BACKEND_URL;
-var socket, selectedChatCompare, timer;
+export var socket, selectedChatCompare, timer;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const {
@@ -53,10 +53,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     socket = io(ENDPOINT);
     socket.emit("setup", user);
     socket.on("connected", () => {
-      console.log("connected");
       setSocketConnected(true);
     });
-    socket.on("typing", () => setIsTyping(true));
+    socket.on("typing", () => {
+      setIsTyping(true);
+    });
     socket.on("stop typing", () => setIsTyping(false));
   }, []);
 
