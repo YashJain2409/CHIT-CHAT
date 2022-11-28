@@ -146,7 +146,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
         },
       };
       const { data } = await axios.put(
-        process.env.REACT_APP_BACKEND_URL + "api/chat/rename",
+        process.env.REACT_APP_BACKEND_URL + "/api/chat/rename",
         { chatId: selectedChat._id, chatName: groupChatName },
         config
       );
