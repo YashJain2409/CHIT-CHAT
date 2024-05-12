@@ -12,17 +12,19 @@ const MyChats = ({ fetchAgain }) => {
   const toast = useToast();
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
 
+
   const fetchChats = async () => {
     try {
       const config = {
         headers: {
           "Content-type": "application/json",
-          Authorization: `Bearer ${user.token}`,
+          Authorization: sessionStorage.getItem("Authorization"),
         },
+        withCredentials: true
       };
       const { data } = await axios.get(
         process.env.REACT_APP_BACKEND_URL + "/api/chat",
-        config
+        config,
       );
       setChats(data);
     } catch (err) {
@@ -82,16 +84,18 @@ const MyChats = ({ fetchAgain }) => {
             {chats.map((chat) => (
               <Box
                 onClick={() => {
-                  if (selectedChat) socket.emit("leave room", selectedChat._id);
+                  if (selectedChat) {
+                    socket.emit("leave room", selectedChat.id);
+                  }
                   setSelectedChat(chat);
                 }}
                 cursor="pointer"
-                bg={selectedChat?._id === chat._id ? "#38B2AC" : "E8E8E8"}
-                color={selectedChat?._id === chat._id ? "white" : "black"}
+                bg={selectedChat?.id === chat.id ? "#38B2AC" : "E8E8E8"}
+                color={selectedChat?.id === chat.id ? "white" : "black"}
                 px={3}
                 py={2}
                 borderRadius="lg"
-                key={chat._id}
+                key={chat.id}
               >
                 <Text>
                   {!chat.isGroupChat

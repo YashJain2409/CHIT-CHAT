@@ -28,7 +28,7 @@ const GroupChatModal = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const toast = useToast();
 
-  const { user, chats, setChats } = ChatState();
+  const { chats, setChats } = ChatState();
 
   const handleSearch = async (query) => {
     setSearch(query);
@@ -37,8 +37,9 @@ const GroupChatModal = ({ children }) => {
       setLoading(true);
       const config = {
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: sessionStorage.getItem("Authorization"),
         },
+        withCredentials: true,
       };
       const { data } = await axios.get(
         `${process.env.REACT_APP_BACKEND_URL}/api/user?search=${query}`,
@@ -71,14 +72,15 @@ const GroupChatModal = ({ children }) => {
     try {
       const config = {
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: sessionStorage.getItem("Authorization"),
         },
+        withCredentials: true,
       };
       const { data } = await axios.post(
         process.env.REACT_APP_BACKEND_URL + "/api/chat/group",
         {
           name: groupChatName,
-          users: JSON.stringify(selectedUsers.map((u) => u._id)),
+          userIds: selectedUsers.map((u) => u.id),
         },
         config
       );
@@ -93,7 +95,7 @@ const GroupChatModal = ({ children }) => {
       });
     } catch (err) {
       toast({
-        title: "Failed to create chat",
+        title: err.response.data.message,
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -103,9 +105,7 @@ const GroupChatModal = ({ children }) => {
   };
 
   const handleAddUser = (user) => {
-    if (
-      selectedUsers.filter((selUser) => selUser._id === user._id).length > 0
-    ) {
+    if (selectedUsers.filter((selUser) => selUser.id === user.id).length > 0) {
       toast({
         title: "User already Added",
         status: "warning",
@@ -120,7 +120,7 @@ const GroupChatModal = ({ children }) => {
 
   const handleDelete = (user) => {
     setSelectedUsers((prev) => {
-      return prev.filter((ele) => ele._id !== user._id);
+      return prev.filter((ele) => ele.id !== user.id);
     });
   };
 
@@ -162,7 +162,7 @@ const GroupChatModal = ({ children }) => {
             <Box w="100%" display="flex" flexWrap="wrap">
               {selectedUsers.map((user) => (
                 <UserBadgeItem
-                  key={user._id}
+                  key={user.id}
                   handleFunction={() => handleDelete(user)}
                   user={user}
                 />
@@ -173,7 +173,7 @@ const GroupChatModal = ({ children }) => {
             ) : (
               searchResult?.slice(0, 4).map((user) => (
                 <UserListItem
-                  key={user._id}
+                  key={user.id}
                   user={user}
                   handleClick={() => {
                     handleAddUser(user);

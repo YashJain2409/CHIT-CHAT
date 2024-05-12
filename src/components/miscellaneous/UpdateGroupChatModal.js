@@ -35,7 +35,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
   const { selectedChat, setSelectedChat, user } = ChatState();
 
   const handleRemove = async (u) => {
-    if (selectedChat.groupAdmin._id !== user._id && u._id !== user._id) {
+    if (selectedChat.groupAdmin.id !== user.id && u.id !== user.id) {
       toast({
         title: "Only admins can remove somenone",
         status: "warning",
@@ -49,17 +49,18 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
       setLoading(true);
       const config = {
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: sessionStorage.getItem("Authorization"),
         },
+        withCredentials: true,
       };
 
       const { data } = await axios.put(
         process.env.REACT_APP_BACKEND_URL + "/api/chat/groupremove",
-        { chatId: selectedChat._id, userId: u._id },
+        { chatId: selectedChat.id, userId: u.id },
         config
       );
       setLoading(false);
-      u._id === user._id ? setSelectedChat() : setSelectedChat(data);
+      u.id === user.id ? setSelectedChat() : setSelectedChat(data);
       setFetchAgain(!fetchAgain);
     } catch (err) {
       toast({
@@ -76,7 +77,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
 
   const handleAddUser = async (u) => {
     if (
-      selectedChat.users.filter((selUser) => selUser._id === u._id).length > 0
+      selectedChat.users.filter((selUser) => selUser.id === u.id).length > 0
     ) {
       toast({
         title: "User already in group",
@@ -88,7 +89,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
       return;
     }
 
-    if (selectedChat.groupAdmin._id !== user._id) {
+    if (selectedChat.groupAdmin.id !== user.id) {
       toast({
         title: "Only admins can add someone",
         status: "warning",
@@ -102,13 +103,14 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
       setLoading(true);
       const config = {
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: sessionStorage.getItem("Authorization"),
         },
+        withCredentials: true,
       };
 
       const { data } = await axios.put(
         process.env.REACT_APP_BACKEND_URL + "/api/chat/groupadd",
-        { chatId: selectedChat._id, userId: u._id },
+        { chatId: selectedChat.id, userId: u.id },
         config
       );
       setLoading(false);
@@ -142,12 +144,13 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
       setRenameLoading(true);
       const config = {
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: sessionStorage.getItem("Authorization"),
         },
+        withCredentials: true,
       };
       const { data } = await axios.put(
         process.env.REACT_APP_BACKEND_URL + "/api/chat/rename",
-        { chatId: selectedChat._id, chatName: groupChatName },
+        { chatId: selectedChat.id, chatName: groupChatName },
         config
       );
       setRenameLoading(false);
@@ -174,8 +177,9 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
       setLoading(true);
       const config = {
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: sessionStorage.getItem("Authorization"),
         },
+        withCredentials: true,
       };
       const { data } = await axios.get(
         `${process.env.REACT_APP_BACKEND_URL}/api/user?search=${query}`,
@@ -215,7 +219,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
               {selectedChat.users.map((u) => (
                 <UserBadgeItem
                   user={u}
-                  key={u._id}
+                  key={u.id}
                   handleFunction={() => handleRemove(u)}
                 />
               ))}
@@ -252,7 +256,7 @@ const UpdateGroupChatModal = ({ fetchAgain, setFetchAgain }) => {
             ) : (
               searchResult?.map((user) => (
                 <UserListItem
-                  key={user._id}
+                  key={user.id}
                   user={user}
                   handleClick={() => {
                     handleAddUser(user);

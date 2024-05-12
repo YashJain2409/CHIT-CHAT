@@ -11,7 +11,7 @@ import {
   Button,
   ModalCloseButton,
   ModalContent,
-  Image,
+  Avatar
 } from "@chakra-ui/react";
 import { ViewIcon } from "@chakra-ui/icons";
 
@@ -40,13 +40,18 @@ const ProfileModal = ({ user, children }) => {
             {user.name}
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody display="flex" justifyContent="space-between" flexDirection="column" alignItems="center">
-            <Image
-              borderRadius="full"
-              boxSize="150px"
+          <ModalBody
+            display="flex"
+            justifyContent="space-between"
+            flexDirection="column"
+            alignItems="center"
+          >
+            <Avatar
+              bg="white"
+              size="2xl"
+              name={user.name}
               src={user.pic}
-              alt={user.name}
-            />
+            ></Avatar>
             <Text
               fontFamily="Work sans"
               fontSize={{ base: "28px", md: "30px" }}
@@ -55,9 +60,7 @@ const ProfileModal = ({ user, children }) => {
             </Text>
           </ModalBody>
           <ModalFooter>
-            <Button onClick={onClose}>
-              Close
-            </Button>
+            <Button onClick={onClose}>Close</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

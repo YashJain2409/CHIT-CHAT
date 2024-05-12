@@ -36,15 +36,16 @@ const Login = () => {
       setLoading(false);
       return;
     }
-    try {
-      const config = {
+    const config = {
         headers: {
           "Content-type": "application/json",
+          "Authorization": 'Basic ' + window.btoa(email + ':' + password)
         },
+        withCredentials: true
       };
-      const { data } = await axios.post(
-        process.env.REACT_APP_BACKEND_URL + "/api/user/login",
-        { email, password },
+    try {
+      const {data,headers} = await axios.get(
+        process.env.REACT_APP_BACKEND_URL + "/api/user/me",
         config
       );
       toast({
@@ -53,6 +54,10 @@ const Login = () => {
         duration: 5000,
         isClosable: true,
       });
+      window.sessionStorage.setItem(
+        "Authorization",
+        headers.authorization
+      );
       localStorage.setItem("userInfo", JSON.stringify(data));
       setUser(data);
       setLoading(false);

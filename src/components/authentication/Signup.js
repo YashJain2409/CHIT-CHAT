@@ -96,19 +96,27 @@ const Signup = () => {
       const config = {
         headers: {
           "Content-type": "application/json",
+          Authorization: "Basic " + window.btoa(email + ":" + password),
         },
+        withCredentials: true,
       };
-      const data = await axios.post(
-        process.env.REACT_APP_BACKEND_URL + "/api/user",
+      const response = await axios.post(
+        process.env.REACT_APP_BACKEND_URL + "/api/user/register",
         { name, email, password, pic },
-        config
       );
-      toast({
+      if(response.status == 201){
+        toast({
         title: "Registration successful",
         status: "success",
         duration: 5000,
         isClosable: true,
-      });
+        });
+      }
+      const { data, headers } = await axios.get(
+        process.env.REACT_APP_BACKEND_URL + "/api/user/me",
+        config
+      );
+      window.sessionStorage.setItem("Authorization", headers.authorization);
       localStorage.setItem("userInfo", JSON.stringify(data));
       setUser(data);
       SetLoading(false);

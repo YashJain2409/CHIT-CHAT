@@ -19,7 +19,7 @@ import Lottie from "react-lottie";
 import animationData from "../animations/typing.json";
 import io from "socket.io-client";
 
-const ENDPOINT = process.env.REACT_APP_BACKEND_URL;
+const ENDPOINT = process.env.REACT_APP_SOCEKT_URL;
 export var socket, selectedChatCompare, timer;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
@@ -55,8 +55,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     socket.on("connected", () => {
       setSocketConnected(true);
     });
-    socket.on("typing", () => {
-      setIsTyping(true);
+    socket.on("typing", (userId) => {
+      if(userId != user.id)
+        setIsTyping(true);
     });
     socket.on("stop typing", () => setIsTyping(false));
   }, []);
@@ -66,18 +67,19 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     try {
       const config = {
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: sessionStorage.getItem("Authorization"),
         },
+        withCredentials: true,
       };
       setLoading(true);
 
       const { data } = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/api/message/${selectedChat._id}`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/message/${selectedChat.id}`,
         config
       );
       setMessages(data);
       setLoading(false);
-      socket.emit("join chat", selectedChat._id);
+      socket.emit("join room", selectedChat.id);
     } catch (err) {
       toast({
         title: "Error occured",
@@ -96,10 +98,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   }, [selectedChat]);
 
   useEffect(() => {
-    socket.on("message recieved", (newMessageRecieved) => {
+    socket.on("message received", (newMessageRecieved) => {
       if (
         !selectedChatCompare ||
-        selectedChatCompare._id !== newMessageRecieved.chat._id
+        selectedChatCompare.id !== newMessageRecieved.chat.id
       ) {
         if (!notifications.includes(newMessageRecieved)) {
           setNotifications([newMessageRecieved, ...notifications]);
@@ -113,21 +115,21 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
   const sendMessage = async (e) => {
     if (e.key === "Enter" && newMessage) {
-      socket.emit("stop typing", selectedChat._id);
+      socket.emit("stop typing", selectedChat.id);
       try {
         const config = {
           headers: {
-            Authorization: `Bearer ${user.token}`,
+            Authorization: sessionStorage.getItem("Authorization"),
           },
+          withCredentials: true,
         };
 
         setNewMessage("");
         const { data } = await axios.post(
           process.env.REACT_APP_BACKEND_URL + "/api/message",
-          { chatId: selectedChat._id, content: newMessage },
+          { chatId: selectedChat.id, content: newMessage },
           config
         );
-
         socket.emit("new message", data);
         setMessages((prev) => [...prev, data]);
       } catch (err) {
@@ -150,17 +152,17 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
     if (!typing) {
       setTyping(true);
-      socket.emit("typing", selectedChat._id);
+      socket.emit("typing", {chatId: selectedChat.id,userId: user.id});
     } else {
       clearTimeout(timer);
     }
     let lastTypingTime = new Date().getTime();
-    var timerLength = 3000;
+    var timerLength = 1000;
     timer = setTimeout(() => {
       var timeNow = new Date().getTime();
       var timeDiff = timeNow - lastTypingTime;
       if (timeDiff >= timerLength) {
-        socket.emit("stop typing", selectedChat._id);
+        socket.emit("stop typing", selectedChat.id);
         setTyping(false);
       }
     }, timerLength);
@@ -182,7 +184,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             <IconButton
               display={{ base: "flex", md: "none" }}
               icon={<ArrowBackIcon />}
-              onClick={() => setSelectedChat("")}
+              onClick={() => {
+                if (selectedChat) {
+                    socket.emit("leave room", selectedChat.id);
+                }
+                setSelectedChat("");
+                }}
             />
             {!selectedChat.isGroupChat ? (
               <>

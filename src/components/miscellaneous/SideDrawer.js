@@ -48,8 +48,10 @@ const SideDrawer = () => {
   const [loadingChat, setLoadingChat] = useState(false);
   const history = useHistory();
 
-  const logoutHandler = () => {
+  const logoutHandler = async () => {
     localStorage.removeItem("userInfo");
+    sessionStorage.removeItem("Authorization");
+    await axios.get("http://localhost:8080/logout", { withCredentials: true });
     history.push("/");
   };
 
@@ -68,8 +70,9 @@ const SideDrawer = () => {
       setLoading(true);
       const config = {
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: sessionStorage.getItem("Authorization"),
         },
+        withCredentials: true,
       };
       const { data } = await axios.get(
         `${process.env.REACT_APP_BACKEND_URL}/api/user?search=${search}`,
@@ -95,11 +98,16 @@ const SideDrawer = () => {
       const config = {
         headers: {
           "Content-type": "application/json",
-          Authorization: `Bearer ${user.token}`,
+          Authorization: sessionStorage.getItem("Authorization"),
         },
+        withCredentials: true,
       };
-      const { data } = await axios.post(process.env.REACT_APP_BACKEND_URL + "/api/chat", { userId }, config);
-      if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
+      const { data } = await axios.post(
+        process.env.REACT_APP_BACKEND_URL + "/api/chat",
+        { userId },
+        config
+      );
+      if (!chats.find((c) => c.id === data.id)) setChats([data, ...chats]);
       setLoadingChat(false);
       setSelectedChat(data);
       onClose();
@@ -151,7 +159,7 @@ const SideDrawer = () => {
               {notifications.map((notif) => {
                 return (
                   <MenuItem
-                    key={notif.chat._id}
+                    key={notif.chat.id}
                     onClick={() => {
                       setSelectedChat(notif.chat);
                       setNotifications(
@@ -209,9 +217,9 @@ const SideDrawer = () => {
               searchResult?.map((user) => {
                 return (
                   <UserListItem
-                    key={user._id}
+                    key={user.id}
                     user={user}
-                    handleClick={() => accessChat(user._id)}
+                    handleClick={() => accessChat(user.id)}
                   />
                 );
               })
